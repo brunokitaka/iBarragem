@@ -5,6 +5,7 @@ import '../pages/loginPage.dart';
 import '../utils/session.dart' as userInfo;
 import 'dart:convert';
 
+
 class Sign {
 
   Future signIn(context, user, password, registrationToken) async {
@@ -69,8 +70,8 @@ class Sign {
               },
             ),
             new RaisedButton(
-              child: new Text("Confirmar",style: TextStyle(color: Colors.white),),
-              color: Colors.lightBlueAccent,
+              child: new Text("Confirmar",style: TextStyle(color: Colors.black),),
+              color: Colors.grey,
               onPressed: () {
                 Navigator.of(context).pushAndRemoveUntil(new MaterialPageRoute(
                   builder: (BuildContext context) => new LandingPage()), (
@@ -86,7 +87,7 @@ class Sign {
   Future<Map> main(user, password, registrationToken) async {
     var returnPacket;
 
-    String url = 'http://ec2-54-207-28-154.sa-east-1.compute.amazonaws.com:8000/auth/';
+    String url = userInfo.mainUrl+'/auth';
     Map map = {
       // 'username':user, 'password':password
       'email':user, 'password':password, 'registrationToken':registrationToken

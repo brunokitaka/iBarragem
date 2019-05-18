@@ -6,10 +6,9 @@ import 'dart:convert';
 var token;
 var user;
 
-Map<String, String> headers = {};
+String mainUrl = "http://192.168.0.9:3000";
 
-var sensors;
-List measures;
+Map<String, String> headers = {};
 
 class Session {
 

@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'pages/homePage.dart';
+import 'pages/loginPage.dart';
 
 void main() => runApp(MyApp());
 
@@ -9,7 +9,11 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'iBarragem',
-      home: HomePage(),
+      home: LandingPage(),
+      // darkTheme: ThemeData(
+      //   primaryColorDark: Colors.grey,
+      //   brightness: Brightness.dark,
+      // ),
     );
   }
 }

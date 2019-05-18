@@ -1,0 +1,40 @@
+{
+  "project_info": {
+    "project_number": "209385120039",
+    "firebase_url": "https://ibarragem.firebaseio.com",
+    "project_id": "ibarragem",
+    "storage_bucket": "ibarragem.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:209385120039:android:15365581242967d6",
+        "android_client_info": {
+          "package_name": "com.example.barragem"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "209385120039-jn762dvfijg1bgmpnra8jgn5jmclj4o5.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBHuG5KSucXhlXOc9NculJu2CdzRvuX0SM"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "209385120039-jn762dvfijg1bgmpnra8jgn5jmclj4o5.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

@@ -1,37 +1,40 @@
 import 'package:flutter/material.dart';
-import '../utils/sensorsUtil.dart';
+import '../utils/sign.dart';
+import 'chartPage.dart';
 import '../utils/style.dart';
+import 'package:flutter_calendar/flutter_calendar.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import '../utils/sensorsUtil.dart';
+import 'measuresPage.dart';
 
 class HomePage extends StatefulWidget{
+  final List _listaSensores = [];
   @override
-  _HomePageState createState() => _HomePageState();
+  _HomePageState createState() => _HomePageState(_listaSensores);
 }
 
 class _HomePageState extends State<HomePage>{
-  List<Sensor> listaSensores = new List();
+  List _listaSensores;
 
-  Future getList() async {
-    return await getSensors(null);
-  }
+  _HomePageState(this._listaSensores);
 
-  _SensorsPageState() {
-    getList().then((lis) => setState(() {
-      listaSensores = lis;
-    }));
+  Future<Map> search() async {
+    List dados = await getSensors();
+    print(dados);
+    setState(() {
+      _listaSensores = dados;
+    });
   }
 
   Future<Null> refreshList() async {
-    await getList().then((lis) => setState(() {
-      //print(lis);
-      listaSensores = lis;
-    }));
+    await search();
     return null;
   }
 
   @override
   void initState() {
     super.initState();
+    search();
   }
 
   @override
@@ -42,46 +45,92 @@ class _HomePageState extends State<HomePage>{
         title: Text("iBarragem"),
         backgroundColor: Colors.green,
         centerTitle: true,
+        actions: <Widget>[
+          IconButton(
+            icon: Icon(Icons.power_settings_new),
+            onPressed: (){
+              Sign().signOut(context);
+            }
+          )
+        ],
+      ),
+      floatingActionButton: FloatingActionButton(
+        child: Icon(Icons.update),
+        onPressed: search,
+        backgroundColor: Colors.green,
+      ),
+      drawer: Drawer(
+        child: DrawerMenu()// We'll populate the Drawer in the next step!
       ),
       body: RefreshIndicator(
           onRefresh: refreshList,
-          child: listaSensores.length == 0 ?
-          new Center(
-            child: CircularProgressIndicator(),
-          )
-          :
-          new Container(
-            child: new ListView.builder(
-              reverse: false,
-              itemBuilder: (BuildContext context, int index) => Lista(
-                this.listaSensores[index].id,
-                this.listaSensores[index].nome,
-                this.listaSensores[index].measures
+          child: Column(
+            children: [
+              new Calendar(
+                isExpandable: true,
+                onDateSelected: (date) {
+                  print(date.toString());
+                  // var year = date.year.toString();
+                  // var month = date.month.toString();
+                  // var day = date.day.toString(); 
+                  // if(month.length == 1) month = '0'+month;
+                  // if(day.length == 1) day = '0'+day;
+                  // refreshList(year+'-'+month+'-'+day);
+                },
+                dayBuilder: (BuildContext context, DateTime day){
+                  return 
+                  InkWell(
+                    highlightColor: Colors.white,
+                    child: Padding(
+                      padding: EdgeInsets.all(5.0),
+                      child: new Container(
+                        decoration: new BoxDecoration(
+                          border: new Border.all(color: Colors.black38),
+                          borderRadius: BorderRadius.circular(50.0)
+                        ),
+                        child: Center(child: 
+                          Text(
+                            day.day.toString(),
+                            style: TextStyle(color: Colors.green),
+                          ),
+                        ),
+                      ),
+                    )
+                  )
+                  ;
+                },
               ),
-              itemCount: listaSensores.length,
-            ),
-          ),
+              _listaSensores.length == 0 ?
+              Center(
+                child: CircularProgressIndicator(),
+              )
+              :
+              Container(
+                child: new ListView.builder(
+                  reverse: false,
+                  itemBuilder: (BuildContext context, int index)=>Lista(this._listaSensores[index]),
+                  itemCount: _listaSensores.length,
+                  scrollDirection: Axis.vertical,
+                  shrinkWrap: true,
+                ),
+              ),
+            ],
+          )
         ),
     );
   }
 }
 
 class Lista extends StatelessWidget{
-  final String id;
-  final String name;
-  final List<Measure> measures;
+  final Map json;
 
   Lista(
-    this.id,
-    this.name,
-    this.measures
+    this.json
   );
 
   @override
   Widget build(BuildContext context) { 
-    // if(measures.isEmpty){
-    //   return SizedBox();
-    // }
+    // print("JSON " + json.toString());
     return
       new InkWell(
         child:
@@ -93,141 +142,111 @@ class Lista extends StatelessWidget{
                 ),
             )
         ),
-        //padding: new EdgeInsets.all(30.0),
         padding: new EdgeInsets.fromLTRB(10.0, 30.0, 10.0, 30.0),
         child: Row(
           children: [
-            // _buildBattery(),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Container(
-                    //padding: const EdgeInsets.only(left: 20.0),
                     child: Text(
-                      name,
+                      json["name"],
                       style: myStyle().getTextStyle(25.0, Colors.black87),
                     ),
                   ),
-                  _buildBattery(),
                 ],
               ),
             ),
-            measures.isEmpty ? Text("---",style: myStyle().getTextStyle(25.0, Colors.black)) 
+            json["medidas"].isEmpty ? Text("---",style: myStyle().getTextStyle(25.0, Colors.black)) 
             : 
             new Text(
-              measures[0].temperatureC.toStringAsFixed(1),
+              json["medidas"][0]["waterLevel"].toStringAsFixed(1),
               style: myStyle()
               .getTextStyle(
                 25.0,
-                measures[0].temperatureC < 15 ?
-                Colors.blueAccent 
+                json["medidas"][0]["waterLevel"] < json["levelMin"] ?
+                Colors.grey 
                 :
-                  measures[0].temperatureC > 30 ?
-                  Colors.red
+                  json["medidas"][0]["waterLevel"] > json["levelMax"] ?
+                  Colors.blue
                   :
-                  Colors.black
+                  Colors.blueAccent
               ),
             ),
-            measures.isEmpty ? 
+            json["medidas"].isEmpty ? 
             Padding(
               padding: EdgeInsets.only(right: 10.0),
-              child: Icon(FontAwesomeIcons.thermometerThreeQuarters, color: Colors.grey)
+              child: Icon(Icons.opacity, color: Colors.grey)
             ) 
             : 
             new Padding(
                 padding: EdgeInsets.only(right: 10.0),
-                child: measures[0].temperatureC < 15 ? 
-                  Icon(Icons.ac_unit, color: Colors.blueAccent[700])
+                child: json["medidas"][0]["waterLevel"] < json["levelMin"] ? 
+                  Icon(Icons.opacity, color: Colors.grey)
                   :
-                  measures[0].temperatureC > 30 ?
-                    Icon(FontAwesomeIcons.fire, color: Colors.red)
+                  json["medidas"][0]["waterLevel"] > json["levelMax"] ?
+                    Icon(Icons.opacity, color: Colors.blue)
                     :
-                    Icon(FontAwesomeIcons.thermometerThreeQuarters, color: Colors.deepOrange)
+                    Icon(Icons.opacity, color: Colors.blueAccent)
                 ,
             ),
-            measures.isEmpty ? Text("---",style: myStyle().getTextStyle(25.0, Colors.black)) 
-            : 
-            new Text(
-              measures[0].humidityPct.toStringAsFixed(1),
-              // TODO: VERIFICAR SE OS VALORES AQUI ESTAO CERTOS 
-              style: myStyle()
-              .getTextStyle(
-                25.0, 
-                measures[0].humidityPct < 80 ? Colors.black : Colors.red
-              ),
-            ),
-            measures.isEmpty ? 
-            Icon(Icons.opacity, color: Colors.blueAccent)
-            : 
-            new Icon(Icons.opacity, color: Colors.blueAccent),
           ],
         ),
       ),
       onTap: (){
-        // Navigator.push(
-        //   context,
-        //   MaterialPageRoute(builder: (context) => MeasuresPage(listaMedicoes: measures, nome: name, id: id)),
-        // );
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => MeasuresPage(listaMedicoes: json["medidas"], nome: json["name"])),
+        );
       },
     );
   }
+}
 
-  Widget _buildBattery() {
-    if(measures.isEmpty){
-      return 
-      Icon(
-          FontAwesomeIcons.times,
-          color: Colors.red,
-          size: 20.0,
-        )
-      ;
-    }
-    if (measures[0].batteryPct > 66.66) {
-      return 
-        Icon(
-          FontAwesomeIcons.batteryFull,
-          color: Colors.green,
-          size: 20.0,
-        )
-      ;
-    }
-    else if(measures[0].batteryPct > 50.00 && measures[0].batteryPct <= 66.66){
-      return 
-        Icon(
-          FontAwesomeIcons.batteryThreeQuarters,
-          color: Colors.limeAccent[700],
-          size: 20.0,
-        )
-      ;
-    }
-    else if(measures[0].batteryPct > 33.33 && measures[0].batteryPct <= 50.00){
-      return 
-        Icon(
-          FontAwesomeIcons.batteryHalf,
-          color: Colors.amber,
-          size: 20.0,
-        )
-      ;
-    }
-    else if(measures[0].batteryPct <= 33.33){
-      return 
-        Icon(
-          FontAwesomeIcons.batteryQuarter,
-          color: Colors.red,
-          size: 20.0,
-        )
-      ;
-    }
-    else if(measures[0].batteryPct <= 1){
-      return 
-        Icon(
-          FontAwesomeIcons.times,
-          color: Colors.red,
-          size: 20.0,
-        )
-      ;
-    }
-    return Text("");
+class DrawerMenu extends StatelessWidget{
+  @override
+  Widget build(BuildContext context){
+    return
+      Drawer(
+        child: ListView(
+          padding: EdgeInsets.zero,
+          children: <Widget>[
+            UserAccountsDrawerHeader(
+              decoration: BoxDecoration(
+                color: Colors.brown
+              ),
+              accountName: new Text("John Doe"),
+              accountEmail: null
+            ),
+            ListTile(
+              title: Text('Gráficos'),
+              trailing: Icon(FontAwesomeIcons.chartBar),
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => ChartPage()),
+                );
+              },
+            ),
+            ListTile(
+              title: Text('Alertas'),
+              trailing: Icon(Icons.warning),
+              onTap: () {
+                // Update the state of the app
+                // ...
+              },
+            ),
+            ListTile(
+              title: Text('Relatórios'),
+              trailing: Icon(FontAwesomeIcons.paperclip),
+              onTap: () {
+                // Update the state of the app
+                // ...
+              },
+            ),
+          ],
+        ),
+      );
   }
 }
